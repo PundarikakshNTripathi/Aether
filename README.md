@@ -1,36 +1,27 @@
 # Aether
 
-**Aether** is a hybrid search engine built to deconstruct the architecture of modern information retrieval systems. It implements a full indexing and retrieval pipeline from scratch, combining classical keyword search with modern neural capabilities.
+A distributed, multimodal web search engine built for the AI era. 
 
-It is designed to bridge the gap between traditional search algorithms (ranking based on term frequency) and semantic understanding (retrieval based on meaning).
+Aether replaces traditional inverted-index search by combining a high-concurrency Go web crawler, a C++ HNSW vector retrieval database, and a dedicated C++ Vision-Language Model (VLM) engine for deep semantic contextualization.
 
 ## Architecture
-The system consists of two distinct subsystems:
-1.  **The Indexer (Crawler & Processor):** * Ingests raw documents.
-    * Tokenizes and normalizes text.
-    * Builds a forward index and an efficient Inverted Index (Hash Map based).
-    * Generates vector embeddings for semantic chunks.
-    
-2.  **The Retriever (Query Engine):**
-    * **Keyword Path:** Executes boolean and ranked retrieval using BM25/TF-IDF scoring.
-    * **Semantic Path:** Performs Cosine Similarity search on vector space.
-    * **Re-ranking:** Agreggates results to return the most contextually relevant documents.
+* **Frontend:** Next.js / React
+* **Crawler Node:** Go + Redis
+* **Search Core:** C++20 (BM25 + HNSW Graph)
+* **VLM Engine:** C++ (Dedicated Inference Service)
+* **Communication:** gRPC / Protocol Buffers
 
-## Key Features
-* **From-Scratch Indexing:** No high-level search libraries (like Elasticsearch); the data structures for the inverted index are custom-built.
-* **Ranking Algorithms:** Manual implementation of BM25 for probabilistic relevance scoring.
-* **Hybrid Search:** Capable of retrieving documents that match the *intent* of a query even if exact keywords are missing.
+## Quick Start (Docker)
+The easiest way to spin up the entire Aether microservice cluster is via Docker Compose.
 
-## Usage
-```python
-from aether.index import Indexer
-from aether.search import Engine
+```bash
+git clone [https://github.com/yourusername/Aether.git](https://github.com/yourusername/Aether.git)
+cd Aether
 
-# Build the index
-idx = Indexer(corpus_path="./data")
-idx.build()
+# 1. Generate the gRPC stubs for all languages
+make proto
 
-# Query
-engine = Engine(idx)
-results = engine.search("distributed consensus mechanisms", mode="hybrid")
+# 2. Build and spin up the cluster
+docker-compose up --build
 ```
+The search UI will be available at http://localhost:3000.
