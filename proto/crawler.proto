@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package crawler;
+
+option go_package = "crawler/internal/pb";
+
+service CrawlerService {
+  rpc IndexPage (IndexPageRequest) returns (IndexPageResponse);
+}
+
+message IndexPageRequest {
+  string url = 1;
+  string title = 2;
+  string raw_text = 3;
+  repeated ImageInfo images = 4;
+}
+
+message ImageInfo {
+  string url = 1;
+  string alt_text = 2;
+  bytes image_data = 3; // Optional raw bytes for VLM indexing / similarity search
+}
+
+message IndexPageResponse {
+  bool success = 1;
+  string error_message = 2;
+}

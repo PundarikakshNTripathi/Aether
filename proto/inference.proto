@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package inference;
+
+service InferenceService {
+  rpc DescribeImage (DescribeImageRequest) returns (DescribeImageResponse);
+  rpc Chat (ChatRequest) returns (stream ChatResponse); // Streaming response for real-time token generation
+}
+
+message DescribeImageRequest {
+  bytes image_data = 1;
+  string prompt = 2;
+}
+
+message DescribeImageResponse {
+  string description = 1;
+}
+
+message ChatRequest {
+  string prompt = 1;
+  repeated string history = 2;
+  bytes image_data = 3; // Optional image data for multimodal query context
+}
+
+message ChatResponse {
+  string token = 1;
+  bool done = 2;
+}
