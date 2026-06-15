@@ -1,0 +1,35 @@
+FROM docker.io/library/golang:1.23-bookworm
+
+# Install build dependencies, protoc, gRPC, Node.js and NPM
+RUN apt-get update && apt-get install -y \
+    protobuf-compiler \
+    libprotobuf-dev \
+    libgrpc-dev \
+    protobuf-compiler-grpc \
+    build-essential \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Go protobuf/gRPC generators
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.33.0 && \
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
+
+# Install TypeScript protobuf plugin
+RUN npm install -g ts-proto
+
+ENV PATH="$PATH:/go/bin"
+
+WORKDIR /workspace
+
+# Set default command to compile protos for all language targets
+CMD mkdir -p crawler/internal/pb search_core/src/pb vlm_engine/src/pb web/lib/pb && \
+    # 1. Go Stubs
+    protoc --proto_path=proto --go_out=crawler/internal/pb --go_opt=paths=source_relative --go-grpc_out=crawler/internal/pb --go-grpc_opt=paths=source_relative proto/crawler.proto && \
+    # 2. C++ Search Core Stubs
+    protoc --proto_path=proto --cpp_out=search_core/src/pb --grpc_out=search_core/src/pb --plugin=protoc-gen-grpc=/usr/bin/grpc_cpp_plugin proto/crawler.proto && \
+    protoc --proto_path=proto --cpp_out=search_core/src/pb --grpc_out=search_core/src/pb --plugin=protoc-gen-grpc=/usr/bin/grpc_cpp_plugin proto/search.proto && \
+    # 3. C++ VLM Engine Stubs
+    protoc --proto_path=proto --cpp_out=vlm_engine/src/pb --grpc_out=vlm_engine/src/pb --plugin=protoc-gen-grpc=/usr/bin/grpc_cpp_plugin proto/inference.proto && \
+    # 4. TypeScript Frontend Stubs
+    protoc --plugin=protoc-gen-ts_proto=/usr/local/bin/protoc-gen-ts_proto --ts_proto_out=web/lib/pb --proto_path=proto proto/search.proto proto/inference.proto --ts_proto_opt=env=node,outputServices=grpc-js,esModuleInterop=true
