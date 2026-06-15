@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  redis:
+    image: docker.io/library/redis:alpine
+    container_name: aether-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  search-core:
+    build:
+      context: ./search_core
+      dockerfile: Dockerfile
+    container_name: aether-search-core
+    ports:
+      - "50051:50051"
+    restart: unless-stopped
+
+  vlm-engine:
+    build:
+      context: ./vlm_engine
+      dockerfile: Dockerfile
+    container_name: aether-vlm-engine
+    ports:
+      - "50052:50052"
+    restart: unless-stopped
+
+  crawler:
+    build:
+      context: ./crawler
+      dockerfile: Dockerfile
+    container_name: aether-crawler
+    environment:
+      - REDIS_ADDR=redis:6379
+      - SEARCH_CORE_ADDR=search-core:50051
+      - CONCURRENCY=5
+      - SEED_URL=https://en.wikipedia.org/wiki/Information_retrieval
+    depends_on:
+      - redis
+      - search-core
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: aether-web
+    ports:
+      - "3000:3000"
+    environment:
+      - SEARCH_CORE_ADDR=search-core:50051
+      - VLM_ENGINE_ADDR=vlm-engine:50052
+    depends_on:
+      - search-core
+      - vlm-engine
+    restart: unless-stopped
