@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package search;
+
+service SearchService {
+  rpc Search (SearchRequest) returns (SearchResponse);
+}
+
+message SearchRequest {
+  string query = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+  bool enable_vector_search = 4; // Toggle between traditional BM25 and HNSW vector search
+}
+
+message SearchResult {
+  string url = 1;
+  string title = 2;
+  string snippet = 3;
+  float score = 4;
+  repeated string image_urls = 5;
+}
+
+message SearchResponse {
+  repeated SearchResult results = 1;
+  int64 total_results = 2;
+  float latency_ms = 3;
+}
